@@ -33,12 +33,14 @@ class MyTextBlockListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print('TEXT BLOCK IS: ${this.textBlock}');
-
     
     return GestureDetector(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (_) {
-            return DetailScreen();
+            return DecoratedBox(
+              decoration: BoxDecoration(color: Colors.black),
+                child:DetailScreen()
+              );
         }));
       },
       child: Text(this.textBlock != null ? this.textBlock.text: 'UNDEFINED'));
@@ -47,14 +49,12 @@ class MyTextBlockListItem extends StatelessWidget {
 
 class DetailScreen extends StatelessWidget {
 
-
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
       },
-      child: Text('GO BACK'));
+      child: Text('GO BACK', style: TextStyle(color: Colors.white)));
   }
 }
