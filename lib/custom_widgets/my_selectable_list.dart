@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:hello_flutter/model/my_first_model.dart';
+import 'package:decimal/decimal.dart';
 
 class MySelectableList extends StatelessWidget {
 
@@ -15,7 +16,7 @@ class MySelectableList extends StatelessWidget {
     
     if (model.selectedTextBlocks != null) {
       widgets = this.model.selectedTextBlocks
-      .map((tBlock) => Hero(tag: tBlock.index, child: MyTextBlockListItem(tBlock))).toList();
+      .map((tBlock) => Hero(tag: tBlock.index, child: MyTextBlockListItem(tBlock, model))).toList();
     }
     return ListView(
       children: widgets
@@ -26,13 +27,14 @@ class MySelectableList extends StatelessWidget {
 
 class MyTextBlockListItem extends StatelessWidget {
 
-  MyTextBlockListItem(this.textBlock);
+  MyTextBlockListItem(this.textBlock, this.model);
 
   final TextBlock textBlock;
+  final MyFirstModel model;
 
   @override
   Widget build(BuildContext context) {
-    print('TEXT BLOCK IS: ${this.textBlock}');
+    // print('TEXT BLOCK IS: ${this.textBlock}');
     
     return GestureDetector(
       onTap: () {
@@ -43,7 +45,20 @@ class MyTextBlockListItem extends StatelessWidget {
               );
         }));
       },
-      child: Text(this.textBlock != null ? this.textBlock.text: 'UNDEFINED'));
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Text(this.textBlock != null ? this.textBlock.text: 'UNDEFINED'),
+          Text(Decimal.parse(this.textBlock.price.toString()).toStringAsFixed(2)),
+          IconButton(
+            icon: Icon(Icons.delete),
+            color: Colors.white,
+            onPressed: () {
+              this.model.deselectTextBlock(this.textBlock);
+            },
+          )
+        ],
+      ));
   }
 }
 

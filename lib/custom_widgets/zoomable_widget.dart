@@ -54,7 +54,7 @@ class MyZoomableImage extends StatelessWidget {
 
 
         child: FittedBox(
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             child: Transform.translate(
               offset: myFirstModel.offset,
               child: Transform.scale(

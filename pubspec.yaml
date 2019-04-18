@@ -26,6 +26,7 @@ dependencies:
   image_picker: ^0.5.2
   photo_view: ^0.2.2
   scoped_model: ^1.0.1
+  decimal: ^0.3.0
   
 
 dev_dependencies:
