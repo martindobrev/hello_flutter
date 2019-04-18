@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -116,7 +117,8 @@ class MyFirstModel extends Model {
             textBlockWidth,
             textBlockHeight,
             'Text Block ${i + 1}  - ${i + 1}',
-            Random().nextDouble() * 5));
+            Random().nextDouble() * 5, 
+            1));
       }
     }
 
@@ -149,11 +151,17 @@ class MyFirstModel extends Model {
 
     notifyListeners();
   }
+
+  void changeTextBlock(int index, String label, int quantity, Decimal price) {
+    this._textBlocks[index] =
+          TextBlock.changeProperties(label, quantity, price.toDouble(), this._textBlocks[index]);
+    notifyListeners();
+  }
 }
 
 class TextBlock {
   TextBlock(this.index, this.selected, this.left, this.top, this.width,
-      this.height, this.text, this.price);
+      this.height, this.text, this.price, this.quantity);
   final int index;
   final double width;
   final double height;
@@ -163,21 +171,25 @@ class TextBlock {
   String text;
 
   final double price;
+  final int quantity;
 
   static TextBlock select(TextBlock block) {
     return TextBlock(block.index, true, block.left, block.top, block.width,
-        block.height, block.text, block.price);
+        block.height, block.text, block.price, block.quantity);
   }
 
   static TextBlock deselect(TextBlock block) {
     return TextBlock(block.index, false, block.left, block.top, block.width,
-        block.height, block.text, block.price);
+        block.height, block.text, block.price, block.quantity);
   }
-}
 
-class ItemSelection {
-  ItemSelection(this.textBlock, this.quantity);
+  static TextBlock withQuantity(int quantity, TextBlock block) {
+    return TextBlock(block.index, false, block.left, block.top, block.width,
+        block.height, block.text, block.price, block.quantity);
+  }
 
-  TextBlock textBlock;
-  int quantity;
+  static TextBlock changeProperties(String text, int quantity, double price, TextBlock block) {
+    return TextBlock(block.index, block.selected, block.left, block.top, block.width,
+        block.height, text, price, quantity);
+  }
 }
