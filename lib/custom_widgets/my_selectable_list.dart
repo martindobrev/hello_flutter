@@ -26,7 +26,7 @@ class MySelectableList extends StatelessWidget {
 class MyTextBlockListItem extends StatelessWidget {
   MyTextBlockListItem(this.textBlock, this.model);
 
-  final TextBlock textBlock;
+  final TextAreaInImage textBlock;
   final MyFirstModel model;
 
   @override
@@ -68,7 +68,7 @@ class MyTextBlockListItem extends StatelessWidget {
 class DetailScreen extends StatelessWidget {
   DetailScreen(this.model, this.textBlock);
   final MyFirstModel model;
-  final TextBlock textBlock;
+  final TextAreaInImage textBlock;
 
   String _label;
   int _quantity;
@@ -85,69 +85,71 @@ class DetailScreen extends StatelessWidget {
       },
       child: Text('GO BACK', style: TextStyle(color: Colors.white)));
       */
-    return Form(
-      key: formKey,
-      child: Column(
-        children: <Widget>[
-          TextFormField(
-            initialValue: textBlock.text,
-            decoration: const InputDecoration(
-              hintText: 'Cappucino',
-              labelText: 'Label',
-            ),
-            validator: (String value) {
-              return value.isEmpty ? 'Set a label' : null;
-            },
-            onSaved: (String value) {
-              _label = value;
-            }
-          ),
-          TextFormField(
-            initialValue: textBlock.quantity.toString(),
-            decoration: const InputDecoration(
-              hintText: '2',
-              labelText: 'Quantity',
-            ),
-            onSaved: (String value) {
-              _quantity = int.parse(value);
-            },
-            validator: (String value) {
-              return !(int.parse(value) is int) ? 'Value must be an integer' : null;
-            },
-          ),
-          TextFormField(
-            initialValue: textBlock.price.toStringAsFixed(2),
-            decoration: const InputDecoration(
-              hintText: '3.70',
-              labelText: 'Price',
-            ),
-            validator: (String value) {
-              return Decimal.parse(value) == null ? 'Value must be a decimal number' : null;
-            },
-            onSaved: (String value) {
-              _price = Decimal.parse(value);
-            },
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              RaisedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('cancel')
+    return ListView(
+          children: [Form(
+        key: formKey,
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              initialValue: textBlock.text,
+              decoration: const InputDecoration(
+                hintText: 'Cappucino',
+                labelText: 'Label',
               ),
-              RaisedButton(
-                onPressed: () {
-                  _submit(context);
-                },
-                child: Text('save')
-              )
-            ]  
-          )
-        ],
+              validator: (String value) {
+                return value.isEmpty ? 'Set a label' : null;
+              },
+              onSaved: (String value) {
+                _label = value;
+              }
+            ),
+            TextFormField(
+              initialValue: textBlock.quantity.toString(),
+              decoration: const InputDecoration(
+                hintText: '2',
+                labelText: 'Quantity',
+              ),
+              onSaved: (String value) {
+                _quantity = int.parse(value);
+              },
+              validator: (String value) {
+                return !(int.parse(value) is int) ? 'Value must be an integer' : null;
+              },
+            ),
+            TextFormField(
+              initialValue: textBlock.price.toStringAsFixed(2),
+              decoration: const InputDecoration(
+                hintText: '3.70',
+                labelText: 'Price',
+              ),
+              validator: (String value) {
+                return Decimal.parse(value) == null ? 'Value must be a decimal number' : null;
+              },
+              onSaved: (String value) {
+                _price = Decimal.parse(value);
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('cancel')
+                ),
+                RaisedButton(
+                  onPressed: () {
+                    _submit(context);
+                  },
+                  child: Text('save')
+                )
+              ]  
+            )
+          ],
+        ),
       ),
-    );
+          ]);
   }
 
 

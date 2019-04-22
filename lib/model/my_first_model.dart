@@ -7,9 +7,10 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 
 class MyFirstModel extends Model {
-  final List<TextBlock> _textBlocks = [];
+  final List<TextAreaInImage> _textAreas = [];
 
   File _file;
   ui.Image _image;
@@ -18,16 +19,16 @@ class MyFirstModel extends Model {
   double scale = 1.0;
   double _tempScale = 1.0;
 
-  TextBlock _editedTextBlock;
+  TextAreaInImage _editedTextBlock;
 
   ui.Offset _translate = ui.Offset.zero;
 
-  UnmodifiableListView<TextBlock> get textBlocks =>
-      UnmodifiableListView(_textBlocks);
-  UnmodifiableListView<TextBlock> get selectedTextBlocks =>
+  UnmodifiableListView<TextAreaInImage> get textBlocks =>
+      UnmodifiableListView(_textAreas);
+  UnmodifiableListView<TextAreaInImage> get selectedTextBlocks =>
       UnmodifiableListView(textBlocks.where((tblock) => tblock.selected));
 
-  TextBlock get editedTextBlock => _editedTextBlock;
+  TextAreaInImage get editedTextBlock => _editedTextBlock;
 
   double get width => _width;
   double get height => _height;
@@ -55,14 +56,57 @@ class MyFirstModel extends Model {
     _height = 0;
 
     if (_image != null) {
+
+      final visionImage = FirebaseVisionImage.fromFile(_file);
+      final textDetector = FirebaseVision.instance.textRecognizer();
+      final visionText = await textDetector.processImage(visionImage);
+
+      
+
       _width = _image.width.toDouble();
       _height = _image.height.toDouble();
       scale = 1.0;
       _translate = Offset.zero;
-      _generateTextBlocks(_width, _height);
+      final List<TextLine> lines = _linesFromBlocks(visionText.blocks);
+
+      _textAreas.clear();
+      _textAreas.addAll(_createTextAreas(lines));
     }
 
     notifyListeners();
+  }
+
+  List<TextAreaInImage> _createTextAreas(List<TextLine> lines) {
+    List<TextAreaInImage> areas = [];
+    for (var i = 0; i < lines.length; i++) {
+      final TextLine line = lines[i];
+      areas.add(TextAreaInImage(i, false, line, line.text, extractPriceFromText(line.text).toDouble(), 1));
+    }
+    return areas;
+  }
+
+  Decimal extractPriceFromText(String text) {
+    String rs = r'(\d+).(\d+)';
+    RegExp regExp = new RegExp(rs);
+  
+    var matches = regExp.allMatches(text);
+
+    if (matches.isNotEmpty) {
+      final String match = matches.last.group(0).toString();
+      final Decimal value = Decimal.tryParse(match);
+      if (value != null) {
+        return value;
+      }
+    }
+
+    return Decimal.parse('1.00');
+    // matches.forEach((m) => print('MATCH: ${m.group(0).toString()}'));
+  }
+
+  List<TextLine> _linesFromBlocks(List<TextBlock> blocks) {
+    final List<TextLine> lines = new List();
+    blocks.map((block) => block.lines).forEach((lineList) => {lines.addAll(lineList)});
+    return lines;
   }
 
   onScaleUpdate(ScaleUpdateDetails scaleUpdateDetails) {
@@ -102,14 +146,79 @@ class MyFirstModel extends Model {
     }
   }
 
+  
+
+  void selectTextBlock(TextAreaInImage textBlock) {
+    if (textBlock == null) {
+      return;
+    }
+
+    if (this._textAreas.length > textBlock.index) {
+      this._textAreas[textBlock.index] =
+          TextAreaInImage.select(this._textAreas[textBlock.index]);
+    }
+
+    notifyListeners();
+  }
+
+  void deselectTextBlock(TextAreaInImage textBlock) {
+    if (textBlock == null) {
+      return;
+    }
+
+    if (this._textAreas.length > textBlock.index) {
+      this._textAreas[textBlock.index] =
+          TextAreaInImage.deselect(this._textAreas[textBlock.index]);
+    }
+
+    notifyListeners();
+  }
+
+  void changeTextBlock(int index, String label, int quantity, Decimal price) {
+    this._textAreas[index] =
+          TextAreaInImage.changeProperties(label, quantity, price.toDouble(), this._textAreas[index]);
+    notifyListeners();
+  }
+}
+
+class TextAreaInImage {
+  TextAreaInImage(this.index, this.selected, this.textLine, this.text, this.price, this.quantity);
+  final int index;
+  final bool selected;
+  final TextLine textLine;
+  String text;
+
+  final double price;
+  final int quantity;
+
+  static TextAreaInImage select(TextAreaInImage area) {
+    return TextAreaInImage(area.index, true, area.textLine, area.text, area.price, area.quantity);
+  }
+
+  static TextAreaInImage deselect(TextAreaInImage area) {
+    return TextAreaInImage(area.index, false, area.textLine, area.text, area.price, area.quantity);
+  }
+
+  static TextAreaInImage withQuantity(int quantity, TextAreaInImage area) {
+    return TextAreaInImage(area.index, false, area.textLine, area.text, area.price, area.quantity);
+  }
+
+  static TextAreaInImage changeProperties(String text, int quantity, double price, TextAreaInImage area) {
+    return TextAreaInImage(area.index, area.selected, area.textLine, text, price, quantity);
+  }
+}
+
+
+
+/*
   void _generateTextBlocks(double width, double height) {
-    List<TextBlock> textBlocks = [];
+    List<TextAreaInImage> textBlocks = [];
     if (width > 0 && height > 0) {
       final double textBlockWidth = width / 10;
       final double textBlockHeight = height / 10;
 
       for (var i = 0; i < 5; i++) {
-        textBlocks.add(TextBlock(
+        textBlocks.add(TextAreaInImage(
             i,
             false,
             i * textBlockWidth,
@@ -125,71 +234,4 @@ class MyFirstModel extends Model {
     this._textBlocks.clear();
     this._textBlocks.addAll(textBlocks);
   }
-
-  void selectTextBlock(TextBlock textBlock) {
-    if (textBlock == null) {
-      return;
-    }
-
-    if (this._textBlocks.length > textBlock.index) {
-      this._textBlocks[textBlock.index] =
-          TextBlock.select(this._textBlocks[textBlock.index]);
-    }
-
-    notifyListeners();
-  }
-
-  void deselectTextBlock(TextBlock textBlock) {
-    if (textBlock == null) {
-      return;
-    }
-
-    if (this._textBlocks.length > textBlock.index) {
-      this._textBlocks[textBlock.index] =
-          TextBlock.deselect(this._textBlocks[textBlock.index]);
-    }
-
-    notifyListeners();
-  }
-
-  void changeTextBlock(int index, String label, int quantity, Decimal price) {
-    this._textBlocks[index] =
-          TextBlock.changeProperties(label, quantity, price.toDouble(), this._textBlocks[index]);
-    notifyListeners();
-  }
-}
-
-class TextBlock {
-  TextBlock(this.index, this.selected, this.left, this.top, this.width,
-      this.height, this.text, this.price, this.quantity);
-  final int index;
-  final double width;
-  final double height;
-  final double top;
-  final double left;
-  final bool selected;
-  String text;
-
-  final double price;
-  final int quantity;
-
-  static TextBlock select(TextBlock block) {
-    return TextBlock(block.index, true, block.left, block.top, block.width,
-        block.height, block.text, block.price, block.quantity);
-  }
-
-  static TextBlock deselect(TextBlock block) {
-    return TextBlock(block.index, false, block.left, block.top, block.width,
-        block.height, block.text, block.price, block.quantity);
-  }
-
-  static TextBlock withQuantity(int quantity, TextBlock block) {
-    return TextBlock(block.index, false, block.left, block.top, block.width,
-        block.height, block.text, block.price, block.quantity);
-  }
-
-  static TextBlock changeProperties(String text, int quantity, double price, TextBlock block) {
-    return TextBlock(block.index, block.selected, block.left, block.top, block.width,
-        block.height, text, price, quantity);
-  }
-}
+  */

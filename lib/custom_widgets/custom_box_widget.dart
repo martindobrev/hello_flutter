@@ -3,7 +3,7 @@ import 'package:hello_flutter/model/my_first_model.dart';
 
 class MyCustomRectWidget extends StatelessWidget {
   MyCustomRectWidget(this.model, this.textBlock);
-  final TextBlock textBlock;
+  final TextAreaInImage textBlock;
   final MyFirstModel model;
 
 
@@ -20,10 +20,11 @@ class MyCustomRectWidget extends StatelessWidget {
   }
             
   _getColor() {
+    var opacity = 0.4;
+    var color = Colors.grey;
     if (this.textBlock.selected) {
-      return Colors.deepOrange;
+      color = Colors.deepOrange;
     }
-
-    return Colors.grey;
+    return Color.fromRGBO(color.red, color.green, color.blue, opacity);
   }
 }

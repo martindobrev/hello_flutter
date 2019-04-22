@@ -14,19 +14,6 @@ class MyZoomableImage extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return GestureDetector(
-        /*
-        onPanStart: (details) {
-          this.myFirstModel.onPanStart(details);
-        },
-
-        onPanUpdate: (details) {
-          this.myFirstModel.onPanUpdate(details);
-        },
-
-        onPanDown: (details) {
-
-        },
-        */
         
         onScaleStart: (details) {
           this.myFirstModel.onScaleStart(details);
@@ -48,10 +35,6 @@ class MyZoomableImage extends StatelessWidget {
           this.myFirstModel.onScaleUpdate(details);
           
         },
-        
-
-        
-
 
         child: FittedBox(
             fit: BoxFit.contain,
@@ -73,7 +56,7 @@ class MyZoomableImage extends StatelessWidget {
     List<Widget> children = [];
     children.add(LayoutId(id: 'image', child: Image.file(this.myFirstModel.file)));
     for (var i = 0; i < this.myFirstModel.textBlocks.length; i++) {
-      final TextBlock tb = this.myFirstModel.textBlocks[i];
+      final TextAreaInImage tb = this.myFirstModel.textBlocks[i];
       children.add(LayoutId(id: i + 1, child: MyCustomRectWidget(this.myFirstModel, tb)));
     }
     return children;
@@ -95,11 +78,11 @@ class MyCustomMultiChildLayoutDelegate extends MultiChildLayoutDelegate {
     }
 
     for (var i = 0; i < model.textBlocks.length; i++) {
-      final TextBlock tb = model.textBlocks[i];
+      final TextAreaInImage tb = model.textBlocks[i];
 
       layoutChild(i + 1,
-          BoxConstraints.tightFor(width: tb.width, height: tb.height));
-      positionChild(i + 1, Offset(tb.top, tb.left));
+          BoxConstraints.tightFor(width: tb.textLine.boundingBox.width.toDouble(), height: tb.textLine.boundingBox.height.toDouble()));
+      positionChild(i + 1, Offset(tb.textLine.boundingBox.left.toDouble(), tb.textLine.boundingBox.top.toDouble()));
     }
   }
 
