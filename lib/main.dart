@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:hello_flutter/custom_widgets/my_selectable_list.dart';
+import 'package:hello_flutter/custom_widgets/my_bottom_menu.dart';
 import 'package:hello_flutter/custom_widgets/zoomable_widget.dart';
 import 'package:hello_flutter/model/my_first_model.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -30,80 +30,42 @@ class MyApp extends StatelessWidget {
         ),
         home: ScopedModel<MyFirstModel>(
           model: model,
-          child: MyNewHomePage(model),
+          child: HomePage(model),
         ));
   }
 }
 
-class MyNewHomePage extends StatelessWidget {
-  MyNewHomePage(this.model);
+class HomePage extends StatelessWidget {
   final MyFirstModel model;
+  HomePage(this.model);
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
-        appBar: AppBar(title: Text('Hellloooo')),
-        body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Expanded(
-                flex: 2,
-                child: ScopedModelDescendant<MyFirstModel>(
-                    builder: (context, child, model) {
-                  if (model.image == null) {
-                    return Text('Please select image');
-                  } else {
-                    //return Image.file(model.file);
-                    return MyZoomableImage(model);
-                  }
-                }),
-              ),
-              Expanded(
-                flex: 1,
-                child: Navigator(
-                  initialRoute: 'listview',
-                  onGenerateRoute: (RouteSettings routeSettings) {
-                    WidgetBuilder builder;
-                    switch (routeSettings.name) {
-                      case 'listview':
-                        builder = (BuildContext _) => DecoratedBox(
-                              decoration:
-                                  BoxDecoration(color: Colors.blueAccent),
-                              child: ScopedModelDescendant<MyFirstModel>(
-                                  builder: (context, child, model) {
-                                return MySelectableList(model);
-                              }),
-                            );
-                        break;
-                      default:
-                        throw Exception('Invalid route: ${routeSettings.name}');
-                    }
-                    
-                    return MaterialPageRoute(builder: builder, settings: routeSettings);
-                  },
-                ),
-              )
-            ]),
-        floatingActionButton: ScopedModelDescendant<MyFirstModel>(
-            builder: (context, child, model) {
-          return FloatingActionButton(
-              onPressed: () {
-                model.getImage();
-              },
-              child: Icon(Icons.image));
-        }));
+        appBar: AppBar(title: Text('CHANGE_TITLE')),
+        body: Stack(
+          children: <Widget>[
+            ScopedModelDescendant<MyFirstModel>(
+                builder: (context, child, model) {
+              if (model.image == null) {
+                return Center(
+                  child: IconButton(
+                      icon: Icon(Icons.image),
+                      onPressed: () {
+                        model.getImage();
+                      }),
+                );
+              } else {
+                return Align(
+                    alignment: Alignment.center, child: MyZoomableImage(model));
+              }
+            }),
+            Align(
+                alignment: Alignment.bottomCenter,
+                child: MyBottomMenu(model))
+          ],
+        ));
   }
+  
 }
-
-/*
-
-
-child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.blueAccent),
-                            child: ScopedModelDescendant<MyFirstModel>(
-                   builder: (context, child, model) {
-                     return MySelectableList(model);
-                   }),
-              ),
-
-              */

@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:decimal/decimal.dart';
@@ -154,8 +153,10 @@ class MyFirstModel extends Model {
     }
 
     if (this._textAreas.length > textBlock.index) {
-      this._textAreas[textBlock.index] =
-          TextAreaInImage.select(this._textAreas[textBlock.index]);
+      this._editedTextBlock = TextAreaInImage.select(this._textAreas[textBlock.index]);
+      this._textAreas[textBlock.index] = this._editedTextBlock;
+          
+      
     }
 
     notifyListeners();
@@ -177,7 +178,19 @@ class MyFirstModel extends Model {
   void changeTextBlock(int index, String label, int quantity, Decimal price) {
     this._textAreas[index] =
           TextAreaInImage.changeProperties(label, quantity, price.toDouble(), this._textAreas[index]);
+    if (_editedTextBlock != null && _editedTextBlock.index == index) {
+      this._editedTextBlock = this._textAreas[index];
+    }
     notifyListeners();
+  }
+
+  bool menuExpanded = false;
+
+  String getTotalPrice() {
+    if (this.selectedTextBlocks.isEmpty) {
+      return '0.00';
+    }
+    return selectedTextBlocks.map((el) => Decimal.tryParse((el.price * el.quantity).toString())).reduce((sum, el) => sum + el).toStringAsFixed(2);
   }
 }
 
@@ -207,31 +220,3 @@ class TextAreaInImage {
     return TextAreaInImage(area.index, area.selected, area.textLine, text, price, quantity);
   }
 }
-
-
-
-/*
-  void _generateTextBlocks(double width, double height) {
-    List<TextAreaInImage> textBlocks = [];
-    if (width > 0 && height > 0) {
-      final double textBlockWidth = width / 10;
-      final double textBlockHeight = height / 10;
-
-      for (var i = 0; i < 5; i++) {
-        textBlocks.add(TextAreaInImage(
-            i,
-            false,
-            i * textBlockWidth,
-            i * textBlockHeight,
-            textBlockWidth,
-            textBlockHeight,
-            'Text Block ${i + 1}  - ${i + 1}',
-            Random().nextDouble() * 5, 
-            1));
-      }
-    }
-
-    this._textBlocks.clear();
-    this._textBlocks.addAll(textBlocks);
-  }
-  */
