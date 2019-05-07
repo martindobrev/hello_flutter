@@ -58,7 +58,7 @@ class HomePage extends StatelessWidget {
                 );
               } else {
                 return Align(
-                    alignment: Alignment.center, child: MyZoomableImage(model));
+                    alignment: Alignment.center, child: GridPhotoViewer(model: model));
               }
             }),
             Align(
