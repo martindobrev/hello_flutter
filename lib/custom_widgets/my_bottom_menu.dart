@@ -79,7 +79,7 @@ class _MyBottomMenuState extends State<MyBottomMenu> with SingleTickerProviderSt
                       builder: (context, child, model) {
                         return Text('TOTAL: ${this.model.getTotalPrice()}',
                             style: TextStyle(
-                                color: Colors.blueGrey,
+                                color: Colors.orange,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold));
                       },
@@ -109,10 +109,16 @@ class _MyBottomMenuState extends State<MyBottomMenu> with SingleTickerProviderSt
                           child: ScopedModelDescendant<MyFirstModel>(
                               builder: (context, child, model) {
                             if (model.editedTextBlock != null) {
+                              var addon = '';
+                              var color = Colors.white;
+                              if (model.editedTextBlock.price == 0) {
+                                addon = '!';
+                                color = Colors.deepOrange;
+                              }
                               return FlatButton(
-                                child: Text('PRICE: ${model.editedTextBlock.price}',
+                                child: Text('PRICE: ${model.editedTextBlock.price.toStringAsFixed(2)} $addon',
                                     style:
-                                        TextStyle(color: Colors.white, fontSize: 20)),
+                                        TextStyle(color: color, fontSize: 20)),
                                 onPressed: () {
                                   _showPriceDialog(model, context);
                                 },

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hello_flutter/custom_widgets/my_bottom_menu.dart';
 import 'package:hello_flutter/custom_widgets/zoomable_widget.dart';
 import 'package:hello_flutter/model/my_first_model.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 void main() => runApp(MyApp());
@@ -41,31 +42,73 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
 
     return Scaffold(
         appBar: AppBar(title: Text('CHANGE_TITLE')),
-        body: Stack(
-          children: <Widget>[
-            ScopedModelDescendant<MyFirstModel>(
-                builder: (context, child, model) {
-              if (model.image == null) {
-                return Center(
-                  child: IconButton(
-                      icon: Icon(Icons.image),
-                      onPressed: () {
-                        model.getImage();
-                      }),
-                );
-              } else {
-                return Align(
-                    alignment: Alignment.center, child: GridPhotoViewer(model: model));
-              }
-            }),
-            Align(
-                alignment: Alignment.bottomCenter,
-                child: MyBottomMenu(model))
-          ],
-        ));
+        body: ScopedModelDescendant<MyFirstModel>(builder: (context, widget, model) {return  Stack(children: _getMainViewChildren(model)); }));
   }
-  
+
+  List<Widget> _getMainViewChildren(MyFirstModel model) {
+    print('Getting children..., file is: ${model.file}');
+    if (model.file == null) {
+      return _getMainClearView(model);
+    }
+
+    return _getMainCalculatorView(model);
+  }
+
+  List<Widget> _getMainClearView(MyFirstModel model) {
+    List<Widget> mainViewWidgets = [];
+    mainViewWidgets.add(Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text('Please select or capture bill image'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              IconButton(
+                  color: Colors.blueAccent,
+                  icon: Icon(Icons.image),
+                  onPressed: () {
+                    model.getImage(ImageSource.gallery);
+                  }),
+              IconButton(
+                icon: Icon(Icons.camera),
+                onPressed: () {
+                  model.getImage(ImageSource.camera);
+                },
+              )
+            ],
+          ),
+        ],
+      ),
+    ));
+    return mainViewWidgets;
+  }
+
+  List<Widget> _getMainCalculatorView(MyFirstModel model) {
+    List<Widget> widgets = [];
+
+    widgets.add(
+        ScopedModelDescendant<MyFirstModel>(builder: (context, child, model) {
+      return Align(
+          alignment: Alignment.center, child: GridPhotoViewer(model: model));
+    }));
+
+    widgets.add(
+        Align(alignment: Alignment.bottomCenter, child: MyBottomMenu(model)));
+
+    widgets.add(
+      ScopedModelDescendant<MyFirstModel>(builder: (context, child, model) {
+        return Align(alignment: Alignment.topRight, child: RaisedButton(child: Icon(Icons.delete), onPressed: () {
+          model.clear();
+        }));
+      }  
+      )
+    );
+
+    return widgets;
+  }
 }

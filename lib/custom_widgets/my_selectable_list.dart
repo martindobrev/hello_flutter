@@ -35,11 +35,7 @@ class MyTextBlockListItem extends StatelessWidget {
 
     return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) {
-            return DecoratedBox(
-                decoration: BoxDecoration(color: Colors.white),
-                child: DetailScreen(this.model, this.textBlock));
-          }));
+          this.model.selectTextBlock(this.textBlock);
         },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

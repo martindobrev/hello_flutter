@@ -15,8 +15,7 @@ class MyFirstModel extends Model {
   ui.Image _image;
   double _width;
   double _height;
-  double scale = 1.0;
-  double _tempScale = 1.0;
+  
 
   TextAreaInImage _editedTextBlock;
 
@@ -37,8 +36,6 @@ class MyFirstModel extends Model {
 
   ui.Offset get offset => _translate;
 
-  ui.Offset _dragStartPosition;
-
   Future<ui.Image> _loadImage(File file) async {
     if (file == null) {
       return null;
@@ -47,8 +44,8 @@ class MyFirstModel extends Model {
     return await decodeImageFromList(data);
   }
 
-  void getImage() async {
-    _file = await ImagePicker.pickImage(source: ImageSource.gallery);
+  void getImage(ImageSource source) async {
+    _file = await ImagePicker.pickImage(source: source, maxWidth: 2000, maxHeight: 2000);
     _image = await _loadImage(file);
 
     _width = 0;
@@ -60,11 +57,8 @@ class MyFirstModel extends Model {
       final textDetector = FirebaseVision.instance.textRecognizer();
       final visionText = await textDetector.processImage(visionImage);
 
-      
-
       _width = _image.width.toDouble();
       _height = _image.height.toDouble();
-      scale = 1.0;
       _translate = Offset.zero;
       final List<TextLine> lines = _linesFromBlocks(visionText.blocks);
 
@@ -85,20 +79,24 @@ class MyFirstModel extends Model {
   }
 
   Decimal extractPriceFromText(String text) {
-    String rs = r'(\d+).(\d+)';
-    RegExp regExp = new RegExp(rs);
+    String rs = r'(\d+)[\,\.]{1}(\d+)';
+    RegExp regExpPeriod = new RegExp(rs);
+    //RegExp regExpComma = new RegExp(r'(\d+),(\d+)');
   
-    var matches = regExp.allMatches(text);
+    var matches = regExpPeriod.allMatches(text);
 
     if (matches.isNotEmpty) {
-      final String match = matches.last.group(0).toString();
-      final Decimal value = Decimal.tryParse(match);
+      String match = matches.last.group(0).toString();
+      Decimal value = Decimal.tryParse(match);
+      if (value == null) {
+        value = Decimal.tryParse(match.replaceAll(',', '.'));
+      }
       if (value != null) {
         return value;
       }
     }
 
-    return Decimal.parse('1.00');
+    return Decimal.parse('0.00');
     // matches.forEach((m) => print('MATCH: ${m.group(0).toString()}'));
   }
 
@@ -108,45 +106,6 @@ class MyFirstModel extends Model {
     return lines;
   }
 
-  onScaleUpdate(ScaleUpdateDetails scaleUpdateDetails) {
-    if (scaleUpdateDetails == null) {
-      return;
-    }
-
-    //print('SCALE UPDATE FOCAL POINT IS: ${scaleUpdateDetails.focalPoint}');
-    //print('SCALE UPDATE IS: ${scaleUpdateDetails.scale}');
-
-    scale = _tempScale * scaleUpdateDetails.scale;
-
-    if (scaleUpdateDetails.scale == 1.0) {
-      var dx = _dragStartPosition.dx - scaleUpdateDetails.focalPoint.dx;
-      var dy = _dragStartPosition.dy - scaleUpdateDetails.focalPoint.dy;
-      //print('SCALE IS 1.0 - TRANSLATING... by: $dx, $dy');
-      _translate = Offset(_translate.dx - dx * 0.3, _translate.dy - dy * 0.3);
-    }
-
-    notifyListeners();
-  }
-
-  void onScaleStart(ScaleStartDetails details) {
-    _tempScale = scale;
-
-    this._dragStartPosition = details.focalPoint;
-    //print('ON SCALE START DETAILS: ${details.focalPoint.}');
-  }
-
-  void onScaleEnd(ScaleEndDetails details) {
-    if (_tempScale > 10.0) {
-      scale = 10.0;
-    }
-
-    if (_tempScale < 0.3) {
-      scale = 0.3;
-    }
-  }
-
-  
-
   void selectTextBlock(TextAreaInImage textBlock) {
     if (textBlock == null) {
       return;
@@ -155,8 +114,6 @@ class MyFirstModel extends Model {
     if (this._textAreas.length > textBlock.index) {
       this._editedTextBlock = TextAreaInImage.select(this._textAreas[textBlock.index]);
       this._textAreas[textBlock.index] = this._editedTextBlock;
-          
-      
     }
 
     notifyListeners();
@@ -191,6 +148,17 @@ class MyFirstModel extends Model {
       return '0.00';
     }
     return selectedTextBlocks.map((el) => Decimal.tryParse((el.price * el.quantity).toString())).reduce((sum, el) => sum + el).toStringAsFixed(2);
+  }
+
+  void captureImage() {}
+
+  void clear() {
+    _file = null;
+    _image = null;
+    _editedTextBlock = null;
+    _textAreas.clear();
+    menuExpanded = false;
+    notifyListeners();
   }
 }
 

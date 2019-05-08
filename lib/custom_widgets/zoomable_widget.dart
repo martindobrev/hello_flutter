@@ -4,80 +4,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:hello_flutter/custom_widgets/custom_box_widget.dart';
 import 'package:hello_flutter/model/my_first_model.dart';
-
-class MyZoomableImage extends StatelessWidget {
-  MyZoomableImage(this.myFirstModel);
-
-  final MyFirstModel myFirstModel;
-
-  @override
-  Widget build(BuildContext context) {
-
-    return GestureDetector(
-        
-        onScaleStart: (details) {
-          this.myFirstModel.onScaleStart(details);
-        },
-        onScaleEnd: (details) {
-          print('ON SCALE END: $details');
-        },
-        onScaleUpdate: (details) {
-          //print('SCALE FROM UPDATE IS: ${details.scale}');
-          //print('   -> SCALE HORIZONTAL: ${details.horizontalScale}');
-          //print('   -> SCALE VERTICAL:  ${details.verticalScale}');
-          
-          //if (details.horizontalScale != 1.0 || details.verticalScale != 1.0) {
-          //this.myFirstModel.
-          //  this.scale = newScale;
-          //});
-          //}
-
-          this.myFirstModel.onScaleUpdate(details);
-          
-        },
-
-        child: FittedBox(
-            fit: BoxFit.contain,
-            child: Transform.translate(
-              offset: myFirstModel.offset,
-              child: Transform.scale(
-                scale: this.myFirstModel.scale,
-                child: SizedBox(
-                    width: this.myFirstModel.width,
-                    height: this.myFirstModel.height,
-                    child: CustomMultiChildLayout(
-                      //delegate: MyCustomMultiChildLayoutDelegate(this.myFirstModel, _off),
-                      children: _getChildren(),
-                    )))))
-            );
-  }
-
-  List<Widget> _getChildren() {
-    List<Widget> children = [];
-    children.add(LayoutId(id: 'image', child: Image.file(this.myFirstModel.file)));
-    for (var i = 0; i < this.myFirstModel.textBlocks.length; i++) {
-      final TextAreaInImage tb = this.myFirstModel.textBlocks[i];
-      children.add(LayoutId(id: i + 1, child: MyCustomRectWidget(this.myFirstModel, tb)));
-    }
-    return children;
-  }
-}
-
-
+import 'package:scoped_model/scoped_model.dart';
 
 class MyCustomMultiChildLayoutDelegate extends MultiChildLayoutDelegate {
-  MyCustomMultiChildLayoutDelegate(this.model, this.scale, this.offset);
+  MyCustomMultiChildLayoutDelegate(this.model);
 
   final MyFirstModel model;
-  final double scale;
-  final Offset offset;
 
   @override
   void performLayout(ui.Size size) {
 
-    final REAL_SCALE = size.width / model.width;
-
-
+    final realScale = size.width / model.width;
 
     if (hasChild('image')) {
       layoutChild('image', BoxConstraints.loose(size));
@@ -86,20 +23,20 @@ class MyCustomMultiChildLayoutDelegate extends MultiChildLayoutDelegate {
 
     for (var i = 0; i < model.textBlocks.length; i++) {
       final TextAreaInImage tb = model.textBlocks[i];
-
-
-      //final newLeft = tb.t
-
+      final newWidth = tb.textLine.boundingBox.width.toDouble() * realScale;
+      final newHeight = tb.textLine.boundingBox.height.toDouble() * realScale;
+      final newLeft = tb.textLine.boundingBox.left.toDouble() * realScale;
+      final newTop = tb.textLine.boundingBox.top.toDouble() * realScale;
 
       layoutChild(i + 1,
-          BoxConstraints.tightFor(width: tb.textLine.boundingBox.width.toDouble(), height: tb.textLine.boundingBox.height.toDouble()));
-      positionChild(i + 1, Offset(tb.textLine.boundingBox.left.toDouble(), tb.textLine.boundingBox.top.toDouble()));
+          BoxConstraints.tightFor(width: newWidth, height: newHeight));
+      positionChild(i + 1, Offset(newLeft, newTop));
     }
   }
 
   @override
   bool shouldRelayout(MultiChildLayoutDelegate oldDelegate) {
-    return true;
+    return false;
   }
 }
 
@@ -130,8 +67,6 @@ class _GridPhotoViewerState extends State<GridPhotoViewer> with SingleTickerProv
   _GridPhotoViewerState(this.model);
 
   final MyFirstModel model;
-
-
 
   @override
   void initState() {
@@ -205,15 +140,17 @@ class _GridPhotoViewerState extends State<GridPhotoViewer> with SingleTickerProv
           transform: Matrix4.identity()
             ..translate(_offset.dx, _offset.dy)
             ..scale(_scale),
-          
                   child: Container(
-                    child: SizedBox(
-                      width: model.width, height: model.height,
-                                        child: CustomMultiChildLayout(
-                            delegate: MyCustomMultiChildLayoutDelegate(this.model, _scale, _offset),
-                            children: children
-            ,
+                    child: ScopedModel<MyFirstModel>(
+                      model: model,
+                                child: SizedBox(
+                        width: model.width, height: model.height,
+                                          child: CustomMultiChildLayout(
+                              delegate: MyCustomMultiChildLayoutDelegate(this.model),
+                              children: _getChildren(),
+                              
           ),
+                      ),
                     ),
                   ),
         ),
@@ -229,8 +166,6 @@ class _GridPhotoViewerState extends State<GridPhotoViewer> with SingleTickerProv
       final TextAreaInImage tb = this.model.textBlocks[i];
       children.add(LayoutId(id: i + 1, child: MyCustomRectWidget(this.model, tb)));
     }
-    
-    //print('GEtting children to render... -> length: ${children.length}');
     return children;
   }
 }
